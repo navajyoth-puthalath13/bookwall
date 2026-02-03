@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+    <title>Book Wall</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <img src="../assets/covers/s2.png" class="sticker sticker-1" alt="sticker 1">
+    <img src="../assets/covers/s3.png" class="sticker sticker-3" alt="sticker 3">
+    
+    <!-- Header Text -->
+    <div class="header-text">
+        <h1 class="title">Jo's Books Bar</h1>
+        <p class="subtitle">2715 Ash Dr.san joese,so....</p>
+    </div>
+    
+    <!-- Add Button -->
+    <button class="add-button" id="addBtn">Add</button>
+    
+    
+    <!-- Shelf 1 with books -->
+    <div class="shelf-container" style="position: absolute; left: 27.29px; top: 178.61px;">
+        <div class="books-row" id="shelf1-books"></div>
+        <div class="shelf">
+            <div class="shelf-shadow"></div>
+            <img src="../assets/covers/shelf.png" class="shelf-wood" alt="">
+        </div>
+    </div>
+
+    <!-- Shelf 2 with books -->
+    <div class="shelf-container" style="position: absolute; left: 27.29px; top: 319.61px;">
+        <div class="books-row" id="shelf2-books"></div>
+        <div class="shelf">
+            <div class="shelf-shadow"></div>
+            <img src="../assets/covers/shelf.png" class="shelf-wood" alt="">
+        </div>
+    </div>
+    
+    <!-- Upload Popup -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-content">
+            <h3 class="popup-title">Give your book a cover</h3>
+            <p class="popup-subtitle">Upload an image or paste a link from the internet.</p>
+            <button class="upload-button" id="uploadBtn">UPLOD</button>
+        </div>
+    </div>
+    
+    <!-- SCRIPT MUST BE HERE AT THE END -->
+    <script src="app.js"></script>
+</body>
+</html>
