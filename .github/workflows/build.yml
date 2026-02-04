@@ -29,7 +29,7 @@ jobs:
         run: npm install -g electron-builder
       
       - name: Build app
-        run: npm run build
+        run: npm run build -- --publish never
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
