@@ -11,29 +11,17 @@ Book Wall was created with a simple mission: to encourage reading after a long d
 - 📚 Keep track of what you own
 - 🏠 Recreate that warm bookshelf feeling on your machine
 
-## 🎨 Features
-
-- Beautiful bookshelf visualization
-- Easy book cover uploads
-- Clean, minimalist design
-- Native desktop experience
-- Your personal reading companion
-
 ## 📥 Download
 
-### macOS
-[⬇️ Download for Mac (.dmg)](https://github.com/navajyoth-puthalath13/bookwall/releases/latest/download/Book.Wall-1.0.0-arm64.dmg)
+**[⬇️ Download Latest Release](https://github.com/navajyoth-puthalath13/bookwall/releases/latest)**
+
+Available for:
+- 🍎 **macOS** (.dmg)
+- 🪟 **Windows** (.exe)
 
 **Note for Mac users:** macOS may show a security warning since the app isn't code-signed. To open:
 1. Right-click the app → Select "Open"
 2. Or: System Settings → Privacy & Security → Click "Open Anyway"
-
-### Windows
-[⬇️ Download for Windows (.exe)](https://github.com/navajyoth-puthalath13/bookwall/releases/latest/download/Book.Wall.Setup.1.0.0.exe)
-
----
-
-Or visit the [Releases page](https://github.com/navajyoth-puthalath13/bookwall/releases) for all versions.
 
 ## 🚀 Getting Started
 
