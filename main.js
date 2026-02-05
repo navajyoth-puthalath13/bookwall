@@ -30,7 +30,7 @@ let mainWindow;
  * - Preload script: bridges renderer and main process securely
  */
 const setupWindow = () => {
-  windowInstance = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 360,
     height: 438,
     minWidth: 360,
@@ -46,7 +46,7 @@ const setupWindow = () => {
   });
 
   // Load the HTML file that contains the UI
-  windowInstance.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 };
 
 /**
@@ -58,7 +58,7 @@ const setupWindow = () => {
 if (process.env.NODE_ENV !== 'production') {
   app.whenReady().then(() => {
     setupWindow();
-    windowInstance.webContents.openDevTools(); // Development only: for debugging
+    mainWindow.webContents.openDevTools(); // Development only: for debugging
   });
 } else {
   app.whenReady().then(setupWindow);
