@@ -38,7 +38,7 @@ const setupWindow = () => {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false, // Security: prevent direct Node.js access from renderer
-      contextIsolation: true, // Security: isolate preload script context
+      contextIsolation: true, // Security: separate preload and renderer contexts
     },
     title: 'Book Wall',
     backgroundColor: '#000000',

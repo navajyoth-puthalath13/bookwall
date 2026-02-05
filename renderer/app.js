@@ -200,7 +200,7 @@ if (uploadBtn) {
                 const newBook = {
                     coverPath: result.filePath, // Path to selected image
                     title: 'Book ' + (collectionData.collection.length + 1), // Auto-generated title
-                    addedAt: new Date().toISOString() // Timestamp
+                    addedAt: new Date().toISOString() // When user added this book (UI-side timestamp)
                 };
                 
                 // Add to collection and save
