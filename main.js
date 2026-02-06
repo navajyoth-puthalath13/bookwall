@@ -6,6 +6,8 @@ app.setName('Book Wall');
 
 let mainWindow;
 
+let windowInstance;
+
 const setupWindow = () => {
   windowInstance = new BrowserWindow({
     width: 360,
@@ -25,16 +27,7 @@ const setupWindow = () => {
   windowInstance.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 };
 
-// Remove DevTools opening for production
-if (process.env.NODE_ENV !== 'production') {
-  app.whenReady().then(() => {
-    setupWindow();
-    // Open DevTools only in development
-    windowInstance.webContents.openDevTools();
-  });
-} else {
-  app.whenReady().then(setupWindow);
-}
+app.whenReady().then(setupWindow);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
@@ -46,7 +39,7 @@ app.on('activate', () => {
 
 // File dialog handler
 ipcMain.handle('open-file-dialog', async () => {
-  const result = await dialog.showOpenDialog(mainWindow, {
+  const result = await dialog.showOpenDialog(windowInstance, {
     properties: ['openFile'],
     filters: [
       { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }
@@ -83,7 +76,7 @@ const writeJsonFile = async (filePath, data) => {
 
 // IPC Handlers
 ipcMain.handle('load-user', async () => {
-  return await readJsonFile(getUserFilePath(), { username: 'Reader', theme: 'light' });
+  return await readJsonFile(getUserFilePath(), { username: 'Reader', theme: 'light', isFirstTime: true });
 });
 
 ipcMain.handle('save-user', async (event, userData) => {

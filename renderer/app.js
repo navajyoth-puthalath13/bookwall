@@ -2,12 +2,16 @@ console.log('🔴 JAVASCRIPT STARTING...');
 
 // Application state
 let collectionData = { collection: [] };
-let profileData = { username: 'Book Collector', theme: 'light' };
+let profileData = { username: 'Book Collector', theme: 'light', isFirstTime: true };
 
 // DOM references
 const addBtn = document.getElementById('addBtn');
 const popupOverlay = document.getElementById('popupOverlay');
 const uploadBtn = document.getElementById('uploadBtn');
+const welcomeOverlay = document.getElementById('welcomeOverlay');
+const nameInput = document.getElementById('nameInput');
+const nextBtn = document.getElementById('nextBtn');
+const subtitleText = document.querySelector('.subtitle');
 const body = document.body;
 const shelf1Books = document.getElementById('shelf1-books');
 const shelf2Books = document.getElementById('shelf2-books');
@@ -20,11 +24,64 @@ async function initializeApp() {
     try {
         profileData = await window.bookWallAPI.loadUserProfile();
         collectionData = await window.bookWallAPI.loadBookCollection();
+        
+        // Show welcome screen on first launch
+        if (profileData.isFirstTime !== false) {
+            showWelcomeScreen();
+        } else {
+            updateHeaderName();
+        }
+        
         displayBooks();
         console.log('App ready!');
     } catch (error) {
         console.error('Init error:', error);
     }
+}
+
+// Show welcome screen
+function showWelcomeScreen() {
+    welcomeOverlay.classList.add('active');
+    body.classList.add('popup-active');
+    nameInput.focus();
+}
+
+// Update header with user's name
+function updateHeaderName() {
+    const titleText = document.querySelector('.title');
+    if (titleText && profileData.username) {
+        titleText.textContent = `${profileData.username}'s Books Bar`;
+    }
+}
+
+// Handle welcome next button
+if (nextBtn) {
+    nextBtn.addEventListener('click', async () => {
+        const userName = nameInput.value.trim();
+        if (userName) {
+            profileData.username = userName;
+            profileData.isFirstTime = false;
+            await window.bookWallAPI.saveUserProfile(profileData);
+            
+            // Update header
+            updateHeaderName();
+            
+            // Close welcome screen
+            welcomeOverlay.classList.remove('active');
+            body.classList.remove('popup-active');
+        } else {
+            nameInput.focus();
+        }
+    });
+}
+
+// Allow Enter key to submit name
+if (nameInput) {
+    nameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            nextBtn.click();
+        }
+    });
 }
 
 // Display books on shelves
@@ -123,8 +180,6 @@ if (uploadBtn) {
         }
     });
 }
-
-
 
 // Start
 initializeApp();

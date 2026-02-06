@@ -715,3 +715,69 @@ body.popup-active {
     z-index: 999;
     background: rgba(255, 255, 255, 0.1); /* Debug - remove later */
 }
+
+/* Welcome Popup Content */
+.welcome-content {
+    width: 206.719px;
+    height: 110.391px;
+    background: #cbfffe;
+    border: 0.703px solid #000000;
+    border-radius: 18.984px;
+    padding: 20px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Name Input Field */
+.name-input {
+    width: 165.234px;
+    height: 28.715px;
+    background: white;
+    border: 0.504px solid #000000;
+    border-radius: 13.602px;
+    padding: 0 12px;
+    font-family: 'SF Pro Display', -apple-system, sans-serif;
+    font-size: 14.063px;
+    font-weight: 500;
+    color: #000000;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.name-input::placeholder {
+    color: #7b7b7b;
+}
+
+.name-input:focus {
+    outline: none;
+    border-color: #61c0bf;
+    box-shadow: 0 0 0 2px rgba(97, 192, 191, 0.2);
+}
+
+/* Next Button */
+.next-button {
+    width: 63.277px;
+    height: 24.627px;
+    background: #61c0bf;
+    border: 0.703px solid #000000;
+    border-radius: 18.984px;
+    font-family: 'SF Pro Display', -apple-system, sans-serif;
+    font-size: 9.844px;
+    font-weight: 500;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.next-button:hover {
+    background: #52b0af;
+    transform: scale(1.05);
+}
+
+.next-button:active {
+    transform: scale(0.98);
+}
