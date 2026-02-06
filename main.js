@@ -4,7 +4,7 @@ const fs = require('fs').promises;
 
 app.setName('Book Wall');
 
-let mainWindow;
+let windowInstance;
 
 const setupWindow = () => {
   windowInstance = new BrowserWindow({
@@ -19,22 +19,13 @@ const setupWindow = () => {
     },
     title: 'Book Wall',
     backgroundColor: '#000000',
-    icon: path.join(__dirname, 'assets', 'icon.png') // Add this line
+    icon: path.join(__dirname, 'assets', 'icon.png')
   });
 
   windowInstance.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 };
 
-// Remove DevTools opening for production
-if (process.env.NODE_ENV !== 'production') {
-  app.whenReady().then(() => {
-    setupWindow();
-    // Open DevTools only in development
-    windowInstance.webContents.openDevTools();
-  });
-} else {
-  app.whenReady().then(setupWindow);
-}
+app.whenReady().then(setupWindow);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
@@ -44,9 +35,9 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) setupWindow();
 });
 
-// File dialog handler
+// File dialog handler with copy functionality
 ipcMain.handle('open-file-dialog', async () => {
-  const result = await dialog.showOpenDialog(mainWindow, {
+  const result = await dialog.showOpenDialog(windowInstance, {
     properties: ['openFile'],
     filters: [
       { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }
@@ -54,7 +45,19 @@ ipcMain.handle('open-file-dialog', async () => {
   });
   
   if (!result.canceled && result.filePaths.length > 0) {
-    return { success: true, filePath: result.filePaths[0] };
+    const sourcePath = result.filePaths[0];
+    const ext = path.extname(sourcePath);
+    const fileName = `book_${Date.now()}${ext}`;
+    const destPath = path.join(__dirname, 'assets', 'book-covers', fileName);
+    
+    try {
+      // Copy file to assets/covers
+      await fs.copyFile(sourcePath, destPath);
+      return { success: true, filePath: fileName }; // Return only filename, not full path
+    } catch (error) {
+      console.error('Failed to copy file:', error);
+      return { success: false, error: error.message };
+    }
   }
   return { success: false };
 });
@@ -83,7 +86,7 @@ const writeJsonFile = async (filePath, data) => {
 
 // IPC Handlers
 ipcMain.handle('load-user', async () => {
-  return await readJsonFile(getUserFilePath(), { username: 'Reader', theme: 'light' });
+  return await readJsonFile(getUserFilePath(), { username: 'Reader', theme: 'light', isFirstTime: true });
 });
 
 ipcMain.handle('save-user', async (event, userData) => {

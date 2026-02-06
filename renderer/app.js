@@ -55,11 +55,10 @@ function createBookElement(book) {
     bookDiv.className = 'book';
     
     if (book.coverPath) {
-        // Use uploaded image
-        const imagePath = book.coverPath.replace(/\\/g, '/');
-        bookDiv.style.backgroundImage = `url('file://${imagePath}')`;
+        // Use local asset path (relative to renderer)
+        bookDiv.style.backgroundImage = `url('../assets/book-covers/${book.coverPath}')`;
         bookDiv.style.backgroundColor = '#1a1a1a';
-        console.log('Book with image:', imagePath);
+        console.log('Book with image:', book.coverPath);
     } else {
         // Default placeholder
         bookDiv.style.backgroundColor = '#4a90e2';
