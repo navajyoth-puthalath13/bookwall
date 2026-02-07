@@ -48,12 +48,14 @@ ipcMain.handle('open-file-dialog', async () => {
     const sourcePath = result.filePaths[0];
     const ext = path.extname(sourcePath);
     const fileName = `book_${Date.now()}${ext}`;
-    const destPath = path.join(__dirname, 'assets', 'book-covers', fileName);
+    const userDataPath = app.getPath('userData');
+    const coversDir = path.join(userDataPath, 'book-covers');
+    const destPath = path.join(coversDir, fileName);
     
     try {
       // Ensure destination directory exists before copying
-      await fs.mkdir(path.dirname(destPath), { recursive: true });
-      // Copy file to assets/covers
+      await fs.mkdir(coversDir, { recursive: true });
+      // Copy file to userData/book-covers
       await fs.copyFile(sourcePath, destPath);
       return { success: true, filePath: fileName }; // Return only filename, not full path
     } catch (error) {
@@ -65,8 +67,8 @@ ipcMain.handle('open-file-dialog', async () => {
 });
 
 // Data file helpers
-const getUserFilePath = () => path.join(__dirname, 'data', 'user.json');
-const getBooksFilePath = () => path.join(__dirname, 'data', 'books.json');
+const getUserFilePath = () => path.join(app.getPath('userData'), 'user.json');
+const getBooksFilePath = () => path.join(app.getPath('userData'), 'books.json');
 
 const readJsonFile = async (filePath, fallback) => {
   try {
@@ -119,4 +121,28 @@ ipcMain.handle('remove-book', async (event, bookId) => {
   const data = await readJsonFile(getBooksFilePath(), { collection: [] });
   data.collection = data.collection.filter(b => b.id !== bookId);
   return await writeJsonFile(getBooksFilePath(), data);
+});
+
+// Serve book cover images as base64 data URLs
+ipcMain.handle('get-book-cover', async (event, fileName) => {
+  if (!fileName) return null;
+  
+  const userDataPath = app.getPath('userData');
+  const coverPath = path.join(userDataPath, 'book-covers', fileName);
+  
+  try {
+    const fileBuffer = await fs.readFile(coverPath);
+    const ext = path.extname(fileName).toLowerCase();
+    let mimeType = 'image/jpeg'; // default
+    
+    if (ext === '.png') mimeType = 'image/png';
+    else if (ext === '.gif') mimeType = 'image/gif';
+    else if (ext === '.webp') mimeType = 'image/webp';
+    
+    const base64 = fileBuffer.toString('base64');
+    return `data:${mimeType};base64,${base64}`;
+  } catch (error) {
+    console.error('Failed to read book cover:', error);
+    return null;
+  }
 });

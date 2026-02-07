@@ -28,7 +28,7 @@ async function initializeApp() {
 }
 
 // Display books on shelves
-function displayBooks() {
+async function displayBooks() {
   // Clear existing books
   shelf1Books.innerHTML = '';
   shelf2Books.innerHTML = '';
@@ -38,27 +38,37 @@ function displayBooks() {
   // Distribute books across shelves (6 per shelf, max 12 books total)
   const booksPerShelf = 6;
   
-  collectionData.collection.forEach((book, index) => {
+  for (let index = 0; index < collectionData.collection.length; index++) {
+    const book = collectionData.collection[index];
+    const bookElement = await createBookElement(book);
+    
     if (index < booksPerShelf) {
       // First shelf
-      shelf1Books.appendChild(createBookElement(book));
+      shelf1Books.appendChild(bookElement);
     } else if (index < booksPerShelf * 2) {
       // Second shelf
-      shelf2Books.appendChild(createBookElement(book));
+      shelf2Books.appendChild(bookElement);
     }
-  });
+  }
 }
 
 // Create book element with exact size and shadow
-function createBookElement(book) {
+async function createBookElement(book) {
     const bookDiv = document.createElement('div');
     bookDiv.className = 'book';
     
     if (book.coverPath) {
-        // Use local asset path (relative to renderer)
-        bookDiv.style.backgroundImage = `url('../assets/book-covers/${book.coverPath}')`;
-        bookDiv.style.backgroundColor = '#1a1a1a';
-        console.log('Book with image:', book.coverPath);
+        // Load image via IPC from userData directory
+        const dataUrl = await window.bookWallAPI.getBookCover(book.coverPath);
+        if (dataUrl) {
+            bookDiv.style.backgroundImage = `url('${dataUrl}')`;
+            bookDiv.style.backgroundColor = '#1a1a1a';
+            console.log('Book with image:', book.coverPath);
+        } else {
+            // Fallback if image can't be loaded
+            bookDiv.style.backgroundColor = '#4a90e2';
+            bookDiv.innerHTML = '📖';
+        }
     } else {
         // Default placeholder
         bookDiv.style.backgroundColor = '#4a90e2';
