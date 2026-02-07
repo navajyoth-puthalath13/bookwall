@@ -133,11 +133,15 @@ ipcMain.handle('get-book-cover', async (event, fileName) => {
   try {
     const fileBuffer = await fs.readFile(coverPath);
     const ext = path.extname(fileName).toLowerCase();
-    let mimeType = 'image/jpeg'; // default
     
-    if (ext === '.png') mimeType = 'image/png';
-    else if (ext === '.gif') mimeType = 'image/gif';
-    else if (ext === '.webp') mimeType = 'image/webp';
+    const mimeTypes = {
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg'
+    };
+    const mimeType = mimeTypes[ext] || 'image/jpeg';
     
     const base64 = fileBuffer.toString('base64');
     return `data:${mimeType};base64,${base64}`;

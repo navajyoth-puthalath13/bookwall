@@ -57,6 +57,12 @@ async function createBookElement(book) {
     const bookDiv = document.createElement('div');
     bookDiv.className = 'book';
     
+    // Helper to set default/fallback styling
+    const setDefaultStyling = () => {
+        bookDiv.style.backgroundColor = '#4a90e2';
+        bookDiv.innerHTML = '📖';
+    };
+    
     if (book.coverPath) {
         // Load image via IPC from userData directory
         const dataUrl = await window.bookWallAPI.getBookCover(book.coverPath);
@@ -66,13 +72,11 @@ async function createBookElement(book) {
             console.log('Book with image:', book.coverPath);
         } else {
             // Fallback if image can't be loaded
-            bookDiv.style.backgroundColor = '#4a90e2';
-            bookDiv.innerHTML = '📖';
+            setDefaultStyling();
         }
     } else {
         // Default placeholder
-        bookDiv.style.backgroundColor = '#4a90e2';
-        bookDiv.innerHTML = '📖';
+        setDefaultStyling();
     }
     
     return bookDiv;
