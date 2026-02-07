@@ -4,6 +4,13 @@ const fs = require('fs').promises;
 
 app.setName('Book Wall');
 
+// Register custom protocol as privileged before app is ready
+if (!app.isReady()) {
+  protocol.registerSchemesAsPrivileged([
+    { scheme: 'bookwall', privileges: { secure: true, supportFetchAPI: true, corsEnabled: true } }
+  ]);
+}
+
 let windowInstance;
 
 // Get user data directory for writable storage
