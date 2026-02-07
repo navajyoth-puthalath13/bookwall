@@ -55,8 +55,8 @@ function createBookElement(book) {
     bookDiv.className = 'book';
     
     if (book.coverPath) {
-        // Use local asset path (relative to renderer)
-        bookDiv.style.backgroundImage = `url('../assets/book-covers/${book.coverPath}')`;
+        // Use custom protocol to access files from userData
+        bookDiv.style.backgroundImage = `url('bookwall://${book.coverPath}')`;
         bookDiv.style.backgroundColor = '#1a1a1a';
         console.log('Book with image:', book.coverPath);
     } else {
