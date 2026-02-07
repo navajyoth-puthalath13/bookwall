@@ -1,10 +1,14 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 
 app.setName('Book Wall');
 
 let windowInstance;
+
+// Get user data directory for writable storage
+const getCoversDir = () => path.join(app.getPath('userData'), 'book-covers');
+const getDataDir = () => path.join(app.getPath('userData'), 'data');
 
 const setupWindow = () => {
   windowInstance = new BrowserWindow({
@@ -25,7 +29,16 @@ const setupWindow = () => {
   windowInstance.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 };
 
-app.whenReady().then(setupWindow);
+app.whenReady().then(() => {
+  // Register custom protocol to serve book covers from userData
+  protocol.registerFileProtocol('bookwall', (request, callback) => {
+    const url = request.url.replace('bookwall://', '');
+    const filePath = path.join(getCoversDir(), url);
+    callback({ path: filePath });
+  });
+  
+  setupWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
@@ -48,12 +61,12 @@ ipcMain.handle('open-file-dialog', async () => {
     const sourcePath = result.filePaths[0];
     const ext = path.extname(sourcePath);
     const fileName = `book_${Date.now()}${ext}`;
-    const destPath = path.join(__dirname, 'assets', 'book-covers', fileName);
+    const destPath = path.join(getCoversDir(), fileName);
     
     try {
       // Ensure destination directory exists before copying
       await fs.mkdir(path.dirname(destPath), { recursive: true });
-      // Copy file to assets/covers
+      // Copy file to userData/book-covers
       await fs.copyFile(sourcePath, destPath);
       return { success: true, filePath: fileName }; // Return only filename, not full path
     } catch (error) {
@@ -65,8 +78,8 @@ ipcMain.handle('open-file-dialog', async () => {
 });
 
 // Data file helpers
-const getUserFilePath = () => path.join(__dirname, 'data', 'user.json');
-const getBooksFilePath = () => path.join(__dirname, 'data', 'books.json');
+const getUserFilePath = () => path.join(getDataDir(), 'user.json');
+const getBooksFilePath = () => path.join(getDataDir(), 'books.json');
 
 const readJsonFile = async (filePath, fallback) => {
   try {
@@ -79,6 +92,8 @@ const readJsonFile = async (filePath, fallback) => {
 
 const writeJsonFile = async (filePath, data) => {
   try {
+    // Ensure directory exists
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(filePath, JSON.stringify(data, null, 2));
     return { success: true };
   } catch (err) {
