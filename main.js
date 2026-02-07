@@ -52,6 +52,9 @@ ipcMain.handle('open-file-dialog', async () => {
     
     try {
       // Ensure destination directory exists before copying
+      const destDir = path.dirname(destPath);
+      await fs.mkdir(destDir, { recursive: true });
+      // Ensure destination directory exists before copying
       await fs.mkdir(path.dirname(destPath), { recursive: true });
       // Copy file to assets/covers
       await fs.copyFile(sourcePath, destPath);
