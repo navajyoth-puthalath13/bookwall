@@ -4,7 +4,7 @@ const fs = require('fs').promises;
 
 app.setName('Book Wall');
 
-let mainWindow;
+let windowInstance;
 
 let windowInstance;
 
@@ -21,7 +21,7 @@ const setupWindow = () => {
     },
     title: 'Book Wall',
     backgroundColor: '#000000',
-    icon: path.join(__dirname, 'assets', 'icon.png') // Add this line
+    icon: path.join(__dirname, 'assets', 'icon.png')
   });
 
   windowInstance.loadFile(path.join(__dirname, 'renderer', 'index.html'));
@@ -37,7 +37,7 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) setupWindow();
 });
 
-// File dialog handler
+// File dialog handler with copy functionality
 ipcMain.handle('open-file-dialog', async () => {
   const result = await dialog.showOpenDialog(windowInstance, {
     properties: ['openFile'],
@@ -47,7 +47,24 @@ ipcMain.handle('open-file-dialog', async () => {
   });
   
   if (!result.canceled && result.filePaths.length > 0) {
-    return { success: true, filePath: result.filePaths[0] };
+    const sourcePath = result.filePaths[0];
+    const ext = path.extname(sourcePath);
+    const fileName = `book_${Date.now()}${ext}`;
+    const destPath = path.join(__dirname, 'assets', 'book-covers', fileName);
+    
+    try {
+      // Ensure destination directory exists before copying
+      const destDir = path.dirname(destPath);
+      await fs.mkdir(destDir, { recursive: true });
+      // Ensure destination directory exists before copying
+      await fs.mkdir(path.dirname(destPath), { recursive: true });
+      // Copy file to assets/covers
+      await fs.copyFile(sourcePath, destPath);
+      return { success: true, filePath: fileName }; // Return only filename, not full path
+    } catch (error) {
+      console.error('Failed to copy file:', error);
+      return { success: false, error: error.message };
+    }
   }
   return { success: false };
 });
