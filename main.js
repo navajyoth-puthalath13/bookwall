@@ -72,7 +72,7 @@ ipcMain.handle('open-file-dialog', async () => {
     
     try {
       // Ensure destination directory exists before copying
-      await fs.mkdir(path.dirname(destPath), { recursive: true });
+      await fs.mkdir(getCoversDir(), { recursive: true });
       // Copy file to userData/book-covers
       await fs.copyFile(sourcePath, destPath);
       return { success: true, filePath: fileName }; // Return only filename, not full path
