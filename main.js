@@ -51,6 +51,8 @@ ipcMain.handle('open-file-dialog', async () => {
     const destPath = path.join(__dirname, 'assets', 'book-covers', fileName);
     
     try {
+      // Ensure destination directory exists before copying
+      await fs.mkdir(path.dirname(destPath), { recursive: true });
       // Copy file to assets/covers
       await fs.copyFile(sourcePath, destPath);
       return { success: true, filePath: fileName }; // Return only filename, not full path
