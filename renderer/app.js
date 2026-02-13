@@ -361,7 +361,6 @@ if (uploadBtn) {
     });
 }
 
-// Test function - add at the end of the fil
 
 // Start
 initializeApp();

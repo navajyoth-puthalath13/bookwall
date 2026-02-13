@@ -1,16 +1,36 @@
 {
-  "name": "book-wall",
+  "name": "bookwall",
   "productName": "Book Wall",
   "version": "1.0.0",
   "description": "A simple desktop app to display your book collection",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "electron": "^28.0.0"
+  },
+  "build": {
+    "appId": "com.bookwall.app",
+    "productName": "Book Wall",
+    "files": [
+      "**/*",
+      "!data/books.json"
+    ],
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.lifestyle"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.png"
+    }
   }
 }
