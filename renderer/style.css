@@ -713,13 +713,12 @@ body.popup-active {
     margin-top: 28px;
 }
 
-/* Debugging - Remove Later */
+/* Header text styling */
 .header-text {
     position: absolute;
     left: 21.125px;
     top: 29.047px;
     z-index: 999;
-    background: rgba(255, 255, 255, 0.1); /* Debug - remove later */
 }
 
 /* Custom added stickers */

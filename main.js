@@ -67,17 +67,26 @@ ipcMain.handle('open-sticker-dialog', async () => {
   const result = await dialog.showOpenDialog(windowInstance, {
     properties: ['openFile'],
     filters: [
-      { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'] }
+      { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }
     ]
   });
   
   if (!result.canceled && result.filePaths.length > 0) {
     const sourcePath = result.filePaths[0];
     const ext = path.extname(sourcePath);
+    
+    // Disallow SVG files for security reasons (SVG can contain active content)
+    if (ext && ext.toLowerCase() === '.svg') {
+      return { success: false, error: 'SVG stickers are not allowed.' };
+    }
+    
     const fileName = `sticker_${Date.now()}${ext}`;
-    const destPath = path.join(__dirname, 'assets', 'stickers', fileName);
+    const stickersDir = path.join(app.getPath('userData'), 'stickers');
+    const destPath = path.join(stickersDir, fileName);
     
     try {
+      // Ensure stickers directory exists
+      await fs.mkdir(stickersDir, { recursive: true });
       await fs.copyFile(sourcePath, destPath);
       return { success: true, filePath: fileName };
     } catch (error) {
@@ -86,6 +95,28 @@ ipcMain.handle('open-sticker-dialog', async () => {
     }
   }
   return { success: false };
+});
+
+// Handler to serve sticker files from userData
+ipcMain.handle('get-sticker', async (event, fileName) => {
+  try {
+    const stickersDir = path.join(app.getPath('userData'), 'stickers');
+    const stickerPath = path.join(stickersDir, fileName);
+    const data = await fs.readFile(stickerPath);
+    const ext = path.extname(fileName).toLowerCase();
+    const mimeTypes = {
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp'
+    };
+    const mimeType = mimeTypes[ext] || 'image/png';
+    return { success: true, data: `data:${mimeType};base64,${data.toString('base64')}` };
+  } catch (error) {
+    console.error('Failed to load sticker:', error);
+    return { success: false, error: error.message };
+  }
 });
 
 // Data file helpers

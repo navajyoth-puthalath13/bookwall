@@ -1,25 +1,6 @@
 {
-  "username": "jo",
+  "username": "",
   "theme": "light",
-  "customStickers": [
-    {
-      "src": "sticker_1770984589381.png",
-      "size": 60,
-      "left": "166px",
-      "top": "247px"
-    },
-    {
-      "src": "sticker_1770984779594.jpeg",
-      "size": 60,
-      "left": "155px",
-      "top": "143px"
-    },
-    {
-      "src": "sticker_1770984804181.jpeg",
-      "size": 60,
-      "left": "227px",
-      "top": "110px"
-    }
-  ],
-  "isFirstTime": false
+  "customStickers": [],
+  "isFirstTime": true
 }

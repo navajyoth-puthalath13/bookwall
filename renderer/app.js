@@ -10,8 +10,6 @@ let dragOffset = { x: 0, y: 0 };
 const addBtn = document.getElementById('addBtn');
 const popupOverlay = document.getElementById('popupOverlay');
 const uploadBtn = document.getElementById('uploadBtn');
-const stickerOverlay = document.getElementById('stickerOverlay');
-const selectStickerBtn = document.getElementById('selectStickerBtn');
 const welcomeOverlay = document.getElementById('welcomeOverlay');
 const nameInput = document.getElementById('nameInput');
 const nextBtn = document.getElementById('nextBtn');
@@ -155,7 +153,7 @@ function getRandomPosition() {
 }
 
 // Create custom sticker element
-function createCustomSticker(data) {
+async function createCustomSticker(data) {
     const wrapper = document.createElement('div');
     wrapper.className = 'custom-sticker';
     wrapper.style.left = data.left;
@@ -163,8 +161,21 @@ function createCustomSticker(data) {
     wrapper.style.width = (data.size || 60) + 'px';
     
     const img = document.createElement('img');
-    img.src = `../assets/stickers/${data.src}`;
     img.draggable = false;
+    
+    // Load sticker from userData via IPC
+    if (data.src) {
+        try {
+            const result = await window.bookWallAPI.getSticker(data.src);
+            if (result.success) {
+                img.src = result.data;
+            } else {
+                console.error('Failed to load sticker:', result.error);
+            }
+        } catch (error) {
+            console.error('Error loading sticker:', error);
+        }
+    }
     
     wrapper.appendChild(img);
     wrapper._data = data;
@@ -275,7 +286,7 @@ if (nextBtn) {
 
 // Allow Enter key to submit name
 if (nameInput) {
-    nameInput.addEventListener('keypress', (e) => {
+    nameInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             nextBtn.click();
         }
@@ -361,7 +372,7 @@ if (uploadBtn) {
     });
 }
 
-// Test function - add at the end of the fil
+// Test function - add at the end of the file
 
 // Start
 initializeApp();

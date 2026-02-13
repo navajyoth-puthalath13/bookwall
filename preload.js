@@ -6,5 +6,6 @@ contextBridge.exposeInMainWorld('bookWallAPI', {
     loadBookCollection: () => ipcRenderer.invoke('load-books'),
     saveBookCollection: (data) => ipcRenderer.invoke('save-books', data),
     openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
-    openStickerDialog: () => ipcRenderer.invoke('open-sticker-dialog')
+    openStickerDialog: () => ipcRenderer.invoke('open-sticker-dialog'),
+    getSticker: (fileName) => ipcRenderer.invoke('get-sticker', fileName)
 });
