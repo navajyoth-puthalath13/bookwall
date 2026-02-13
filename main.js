@@ -74,13 +74,18 @@ ipcMain.handle('open-sticker-dialog', async () => {
   const result = await dialog.showOpenDialog(windowInstance, {
     properties: ['openFile'],
     filters: [
-      { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'] }
+      { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }
     ]
   });
   
   if (!result.canceled && result.filePaths.length > 0) {
     const sourcePath = result.filePaths[0];
     const ext = path.extname(sourcePath);
+
+    // Disallow SVG files for security reasons (SVG can contain active content)
+    if (ext && ext.toLowerCase() === '.svg') {
+      return { success: false, error: 'SVG stickers are not allowed.' };
+    }
     const fileName = `sticker_${Date.now()}${ext}`;
     const destPath = path.join(__dirname, 'assets', 'stickers', fileName);
     
