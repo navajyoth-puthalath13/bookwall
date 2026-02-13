@@ -8,8 +8,9 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <img src="../assets/covers/s2.png" class="sticker sticker-1" alt="sticker 1">
-    <img src="../assets/covers/s3.png" class="sticker sticker-3" alt="sticker 3">
+    <!-- Default Stickers -->
+    <img src="../assets/covers/s2.png" class="sticker sticker-1" alt="sticker 1" data-default-sticker="s1">
+    <img src="../assets/covers/s3.png" class="sticker sticker-3" alt="sticker 3" data-default-sticker="s2">
     
     <!-- Header Text -->
     <div class="header-text">
@@ -19,7 +20,6 @@
     
     <!-- Add Button -->
     <button class="add-button" id="addBtn">Add</button>
-    
     
     <!-- Shelf 1 with books -->
     <div class="shelf-container" style="position: absolute; left: 27.29px; top: 178.61px;">
@@ -44,9 +44,34 @@
         <div class="popup-content">
             <h3 class="popup-title">Give your book a cover</h3>
             <p class="popup-subtitle">Upload an image or paste a link from the internet.</p>
-            <button class="upload-button" id="uploadBtn">UPLOD</button>
+            <button class="upload-button" id="uploadBtn">UPLOAD</button>
         </div>
     </div>
+    
+    <!-- Sticker Customization Popup -->
+    <div class="popup-overlay" id="stickerOverlay">
+        <div class="popup-content">
+            <h3 class="popup-title">Add a Sticker</h3>
+            <p class="popup-subtitle">Select an image to add to your bookshelf</p>
+            <button class="upload-button" id="selectStickerBtn">SELECT IMAGE</button>
+        </div>
+    </div>
+    
+    <!-- Welcome Popup (First Time) -->
+    <div class="popup-overlay" id="welcomeOverlay">
+        <div class="welcome-content">
+            <input 
+                type="text" 
+                id="nameInput" 
+                class="name-input" 
+                placeholder="Your name"
+                maxlength="20"
+            />
+            <button id="nextBtn" class="next-button">Next</button>
+        </div>
+    </div>
+    
+    <!-- Test Add Sticker Button -->
     
     <!-- SCRIPT MUST BE HERE AT THE END -->
     <script src="app.js"></script>

@@ -2,9 +2,7 @@ console.log('🔴 JAVASCRIPT STARTING...');
 
 // Application state
 let collectionData = { collection: [] };
-let profileData = { username: 'Book Collector', theme: 'light', isFirstTime: true };
-let currentSticker = null;
-let newStickerData = null;
+let profileData = { username: 'Book Collector', theme: 'light', isFirstTime: true, customStickers: [] };
 let isDragging = false;
 let dragOffset = { x: 0, y: 0 };
 
@@ -13,13 +11,7 @@ const addBtn = document.getElementById('addBtn');
 const popupOverlay = document.getElementById('popupOverlay');
 const uploadBtn = document.getElementById('uploadBtn');
 const stickerOverlay = document.getElementById('stickerOverlay');
-const changeStickerBtn = document.getElementById('changeStickerBtn');
-const saveStickerBtn = document.getElementById('saveStickerBtn');
-const previewImage = document.getElementById('previewImage');
-const sizeSlider = document.getElementById('sizeSlider');
-const rotationSlider = document.getElementById('rotationSlider');
-const sizeValue = document.getElementById('sizeValue');
-const rotationValue = document.getElementById('rotationValue');
+const selectStickerBtn = document.getElementById('selectStickerBtn');
 const welcomeOverlay = document.getElementById('welcomeOverlay');
 const nameInput = document.getElementById('nameInput');
 const nextBtn = document.getElementById('nextBtn');
@@ -34,6 +26,10 @@ async function initializeApp() {
         profileData = await window.bookWallAPI.loadUserProfile();
         collectionData = await window.bookWallAPI.loadBookCollection();
         
+        if (!profileData.customStickers) {
+            profileData.customStickers = [];
+        }
+        
         if (profileData.isFirstTime !== false) {
             showWelcomeScreen();
         } else {
@@ -41,7 +37,7 @@ async function initializeApp() {
         }
         
         displayBooks();
-        initializeStickers();
+        setupDefaultStickers();
         loadCustomStickers();
         console.log('App ready!');
     } catch (error) {
@@ -49,306 +45,182 @@ async function initializeApp() {
     }
 }
 
-// Initialize default stickers
-function initializeStickers() {
-    const stickers = document.querySelectorAll('.sticker');
+// Setup default stickers (s1, s2, etc.)
+function setupDefaultStickers() {
+    // Try multiple ways to find stickers
+    let stickers = document.querySelectorAll('[data-default-sticker]');
     
-    stickers.forEach(sticker => {
-        const stickerId = sticker.dataset.stickerId;
+    if (stickers.length === 0) {
+        console.warn('No stickers found with data-default-sticker, trying .sticker class');
+        stickers = document.querySelectorAll('.sticker:not(.custom-sticker)');
+    }
+    
+    console.log('📌 Found', stickers.length, 'default stickers');
+    
+    stickers.forEach((sticker, index) => {
+        console.log('Setting up sticker', index);
         
-        // Load saved customization
-        if (profileData.stickerCustomizations && profileData.stickerCustomizations[stickerId]) {
-            const custom = profileData.stickerCustomizations[stickerId];
-            if (custom.src) sticker.src = `../assets/stickers/${custom.src}`;
-            if (custom.size) sticker.style.width = custom.size + 'px';
-            if (custom.rotation) sticker.style.transform = `rotate(${custom.rotation}deg)`;
-            if (custom.left) sticker.style.left = custom.left;
-            if (custom.top) sticker.style.top = custom.top;
-            if (custom.bottom) sticker.style.bottom = custom.bottom;
-            if (custom.right) sticker.style.right = custom.right;
-        }
+        // Make sure sticker is interactive
+        sticker.style.pointerEvents = 'auto';
+        sticker.style.cursor = 'pointer';
+        sticker.draggable = false;
         
-        let clickTimer = null;
+        // Remove any existing listeners
+        const newSticker = sticker.cloneNode(true);
+        sticker.parentNode.replaceChild(newSticker, sticker);
         
-        // Handle clicks with delay to detect double-click
-        sticker.addEventListener('click', (e) => {
-            if (!isDragging) {
-                if (clickTimer === null) {
-                    clickTimer = setTimeout(() => {
-                        // Single click
-                        openStickerCustomization(sticker);
-                        clickTimer = null;
-                    }, 250);
-                }
-            }
-        });
-        
-        // Double click to ADD NEW sticker
-        sticker.addEventListener('dblclick', (e) => {
+        // Add double-click listener
+        newSticker.addEventListener('dblclick', function(e) {
             e.preventDefault();
-            clearTimeout(clickTimer);
-            clickTimer = null;
-            openAddNewSticker();
+            e.stopPropagation();
+            console.log('🎯 DOUBLE CLICK DETECTED on sticker!');
+            addNewSticker();
         });
         
-        // Drag to move
-        sticker.addEventListener('mousedown', (e) => startDrag(e, sticker));
+        // Visual feedback on hover
+        newSticker.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.1)';
+        });
+        
+        newSticker.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
     });
 }
 
-// Load custom added stickers
+// Load saved custom stickers
 function loadCustomStickers() {
-    if (!profileData.customStickers) profileData.customStickers = [];
-    
-    profileData.customStickers.forEach(stickerData => {
-        createCustomStickerElement(stickerData);
+    profileData.customStickers.forEach(data => {
+        createCustomSticker(data);
     });
+}
+
+// Add new sticker - open file picker directly
+async function addNewSticker() {
+    console.log('🎨 Opening file picker for new sticker...');
+    
+    try {
+        const result = await window.bookWallAPI.openStickerDialog();
+        console.log('File selection result:', result);
+        
+        if (result.success) {
+            console.log('✅ File selected:', result.filePath);
+            
+            const position = getRandomPosition();
+            console.log('📍 Random position:', position);
+            
+            const newSticker = {
+                src: result.filePath,
+                size: 60,
+                left: position.left,
+                top: position.top
+            };
+            
+            profileData.customStickers.push(newSticker);
+            await window.bookWallAPI.saveUserProfile(profileData);
+            
+            createCustomSticker(newSticker);
+            console.log('✅ Sticker added successfully!');
+        } else {
+            console.log('❌ File selection cancelled');
+        }
+    } catch (error) {
+        console.error('❌ Error adding sticker:', error);
+        alert('Error adding sticker: ' + error.message);
+    }
+}
+
+// Get random position avoiding center area
+function getRandomPosition() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    let x, y;
+    let attempts = 0;
+    
+    do {
+        x = Math.random() * (width - 100) + 10;
+        y = Math.random() * (height - 100) + 10;
+        attempts++;
+        
+        const inBookArea = (x > 20 && x < 320) && (y > 150 && y < 360);
+        
+        if (!inBookArea || attempts > 10) break;
+    } while (attempts < 10);
+    
+    return {
+        left: Math.round(x) + 'px',
+        top: Math.round(y) + 'px'
+    };
 }
 
 // Create custom sticker element
-function createCustomStickerElement(data) {
-    const stickerImg = document.createElement('img');
-    stickerImg.className = 'sticker custom-added-sticker';
-    stickerImg.src = `../assets/stickers/${data.src}`;
-    stickerImg.style.position = 'absolute';
-    stickerImg.style.left = data.left || '100px';
-    stickerImg.style.top = data.top || '100px';
-    stickerImg.style.width = data.size + 'px';
-    stickerImg.style.height = 'auto';
-    stickerImg.style.transform = `rotate(${data.rotation || 0}deg)`;
-    stickerImg.dataset.customSticker = 'true';
-    stickerImg.dataset.stickerData = JSON.stringify(data);
+function createCustomSticker(data) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-sticker';
+    wrapper.style.left = data.left;
+    wrapper.style.top = data.top;
+    wrapper.style.width = (data.size || 60) + 'px';
     
-    // Double click to add another
-    stickerImg.addEventListener('dblclick', (e) => {
+    const img = document.createElement('img');
+    img.src = `../assets/stickers/${data.src}`;
+    img.draggable = false;
+    
+    wrapper.appendChild(img);
+    wrapper._data = data;
+    
+    // Double-click to add another sticker
+    wrapper.addEventListener('dblclick', (e) => {
         e.preventDefault();
-        openAddNewSticker();
+        e.stopPropagation();
+        if (!isDragging) {
+            addNewSticker();
+        }
     });
     
-    // Click to customize
-    stickerImg.addEventListener('click', (e) => {
-        if (!isDragging) {
-            openCustomStickerEdit(stickerImg, data);
+    // Right-click to delete
+    wrapper.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (confirm('Delete this sticker?')) {
+            deleteSticker(wrapper);
         }
     });
     
     // Drag to move
-    stickerImg.addEventListener('mousedown', (e) => startDragCustom(e, stickerImg, data));
-    
-    document.body.appendChild(stickerImg);
-}
-
-// Open popup to add NEW sticker
-function openAddNewSticker() {
-    currentSticker = null;
-    newStickerData = { size: 60, rotation: 0 };
-    
-    previewImage.src = '';
-    previewImage.style.display = 'none';
-    sizeSlider.value = 60;
-    rotationSlider.value = 0;
-    sizeValue.textContent = '60';
-    rotationValue.textContent = '0';
-    
-    changeStickerBtn.textContent = 'UPLOAD IMAGE';
-    saveStickerBtn.textContent = 'ADD STICKER';
-    
-    stickerOverlay.classList.add('active');
-    body.classList.add('popup-active');
-}
-
-// Open customization popup for existing sticker
-function openStickerCustomization(sticker) {
-    currentSticker = sticker;
-    newStickerData = null;
-    const stickerId = sticker.dataset.stickerId;
-    
-    // Load current settings
-    const custom = profileData.stickerCustomizations?.[stickerId] || {};
-    const currentSize = parseInt(sticker.style.width) || 60;
-    const currentRotation = custom.rotation || 0;
-    
-    previewImage.src = sticker.src;
-    previewImage.style.display = 'block';
-    sizeSlider.value = currentSize;
-    rotationSlider.value = currentRotation;
-    sizeValue.textContent = currentSize;
-    rotationValue.textContent = currentRotation;
-    
-    changeStickerBtn.textContent = 'CHANGE IMAGE';
-    saveStickerBtn.textContent = 'SAVE';
-    
-    stickerOverlay.classList.add('active');
-    body.classList.add('popup-active');
-}
-
-// Open edit for custom added sticker
-function openCustomStickerEdit(stickerImg, data) {
-    currentSticker = stickerImg;
-    newStickerData = null;
-    
-    previewImage.src = stickerImg.src;
-    previewImage.style.display = 'block';
-    sizeSlider.value = data.size;
-    rotationSlider.value = data.rotation || 0;
-    sizeValue.textContent = data.size;
-    rotationValue.textContent = data.rotation || 0;
-    
-    changeStickerBtn.textContent = 'CHANGE IMAGE';
-    saveStickerBtn.textContent = 'SAVE';
-    
-    stickerOverlay.classList.add('active');
-    body.classList.add('popup-active');
-}
-
-// Change sticker image
-if (changeStickerBtn) {
-    changeStickerBtn.addEventListener('click', async () => {
-        try {
-            const result = await window.bookWallAPI.openStickerDialog();
-            
-            if (result.success) {
-                previewImage.src = `../assets/stickers/${result.filePath}`;
-                previewImage.style.display = 'block';
-                
-                if (newStickerData) {
-                    newStickerData.src = result.filePath;
-                } else if (currentSticker) {
-                    currentSticker.dataset.newSrc = result.filePath;
-                }
-            }
-        } catch (error) {
-            console.error('Sticker upload error:', error);
+    wrapper.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
+            startDrag(e, wrapper);
         }
     });
+    
+    document.body.appendChild(wrapper);
 }
 
-// Size slider
-if (sizeSlider) {
-    sizeSlider.addEventListener('input', (e) => {
-        sizeValue.textContent = e.target.value;
-        previewImage.style.width = e.target.value + 'px';
-    });
+// Delete sticker
+async function deleteSticker(wrapper) {
+    const data = wrapper._data;
+    wrapper.remove();
+    
+    const index = profileData.customStickers.indexOf(data);
+    if (index > -1) {
+        profileData.customStickers.splice(index, 1);
+        await window.bookWallAPI.saveUserProfile(profileData);
+    }
 }
 
-// Rotation slider
-if (rotationSlider) {
-    rotationSlider.addEventListener('input', (e) => {
-        rotationValue.textContent = e.target.value;
-        previewImage.style.transform = `rotate(${e.target.value}deg)`;
-    });
-}
-
-// Save sticker
-if (saveStickerBtn) {
-    saveStickerBtn.addEventListener('click', async () => {
-        // Adding NEW sticker
-        if (newStickerData) {
-            if (!newStickerData.src) {
-                alert('Please upload an image first');
-                return;
-            }
-            
-            const newSticker = {
-                src: newStickerData.src,
-                size: parseInt(sizeSlider.value),
-                rotation: parseInt(rotationSlider.value),
-                left: '150px',
-                top: '150px'
-            };
-            
-            if (!profileData.customStickers) profileData.customStickers = [];
-            profileData.customStickers.push(newSticker);
-            await window.bookWallAPI.saveUserProfile(profileData);
-            
-            createCustomStickerElement(newSticker);
-        }
-        // Editing EXISTING sticker
-        else if (currentSticker) {
-            const newSize = parseInt(sizeSlider.value);
-            const newRotation = parseInt(rotationSlider.value);
-            const newSrc = currentSticker.dataset.newSrc;
-            
-            // Update display
-            if (newSrc) {
-                currentSticker.src = `../assets/stickers/${newSrc}`;
-            }
-            currentSticker.style.width = newSize + 'px';
-            currentSticker.style.transform = `rotate(${newRotation}deg)`;
-            
-            // Save to profile
-            if (currentSticker.dataset.customSticker) {
-                // Custom added sticker
-                const data = JSON.parse(currentSticker.dataset.stickerData);
-                if (newSrc) data.src = newSrc;
-                data.size = newSize;
-                data.rotation = newRotation;
-                currentSticker.dataset.stickerData = JSON.stringify(data);
-                
-                // Update in profile
-                const index = profileData.customStickers.findIndex(s => 
-                    s.src === data.src && s.left === data.left && s.top === data.top
-                );
-                if (index !== -1) {
-                    profileData.customStickers[index] = data;
-                }
-            } else {
-                // Default sticker
-                const stickerId = currentSticker.dataset.stickerId;
-                if (!profileData.stickerCustomizations) {
-                    profileData.stickerCustomizations = {};
-                }
-                
-                profileData.stickerCustomizations[stickerId] = {
-                    src: newSrc || profileData.stickerCustomizations[stickerId]?.src,
-                    size: newSize,
-                    rotation: newRotation,
-                    left: currentSticker.style.left,
-                    top: currentSticker.style.top,
-                    bottom: currentSticker.style.bottom,
-                    right: currentSticker.style.right
-                };
-            }
-            
-            await window.bookWallAPI.saveUserProfile(profileData);
-            currentSticker.dataset.newSrc = '';
-        }
-        
-        // Close popup
-        stickerOverlay.classList.remove('active');
-        body.classList.remove('popup-active');
-        currentSticker = null;
-        newStickerData = null;
-    });
-}
-
-// Close sticker popup
-if (stickerOverlay) {
-    stickerOverlay.addEventListener('click', (e) => {
-        if (e.target === stickerOverlay) {
-            stickerOverlay.classList.remove('active');
-            body.classList.remove('popup-active');
-            if (currentSticker) currentSticker.dataset.newSrc = '';
-            currentSticker = null;
-            newStickerData = null;
-        }
-    });
-}
-
-// Drag default sticker
-function startDrag(e, sticker) {
+// Drag sticker
+function startDrag(e, wrapper) {
     isDragging = false;
-    const rect = sticker.getBoundingClientRect();
+    e.preventDefault();
     
+    const rect = wrapper.getBoundingClientRect();
     dragOffset.x = e.clientX - rect.left;
     dragOffset.y = e.clientY - rect.top;
     
     const onMove = (e) => {
         isDragging = true;
-        sticker.style.left = (e.clientX - dragOffset.x) + 'px';
-        sticker.style.top = (e.clientY - dragOffset.y) + 'px';
-        sticker.style.bottom = 'auto';
-        sticker.style.right = 'auto';
+        wrapper.style.left = (e.clientX - dragOffset.x) + 'px';
+        wrapper.style.top = (e.clientY - dragOffset.y) + 'px';
     };
     
     const onUp = async () => {
@@ -356,59 +228,16 @@ function startDrag(e, sticker) {
         document.removeEventListener('mouseup', onUp);
         
         if (isDragging) {
-            await saveStickerPosition(sticker);
-            setTimeout(() => { isDragging = false; }, 100);
-        }
-    };
-    
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-}
-
-// Drag custom sticker
-function startDragCustom(e, stickerImg, data) {
-    isDragging = false;
-    const rect = stickerImg.getBoundingClientRect();
-    
-    dragOffset.x = e.clientX - rect.left;
-    dragOffset.y = e.clientY - rect.top;
-    
-    const onMove = (e) => {
-        isDragging = true;
-        stickerImg.style.left = (e.clientX - dragOffset.x) + 'px';
-        stickerImg.style.top = (e.clientY - dragOffset.y) + 'px';
-    };
-    
-    const onUp = async () => {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-        
-        if (isDragging) {
-            data.left = stickerImg.style.left;
-            data.top = stickerImg.style.top;
+            wrapper._data.left = wrapper.style.left;
+            wrapper._data.top = wrapper.style.top;
             await window.bookWallAPI.saveUserProfile(profileData);
-            setTimeout(() => { isDragging = false; }, 100);
         }
+        
+        setTimeout(() => { isDragging = false; }, 100);
     };
     
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
-}
-
-// Save sticker position
-async function saveStickerPosition(sticker) {
-    const stickerId = sticker.dataset.stickerId;
-    if (!profileData.stickerCustomizations) {
-        profileData.stickerCustomizations = {};
-    }
-    if (!profileData.stickerCustomizations[stickerId]) {
-        profileData.stickerCustomizations[stickerId] = {};
-    }
-    
-    profileData.stickerCustomizations[stickerId].left = sticker.style.left;
-    profileData.stickerCustomizations[stickerId].top = sticker.style.top;
-    
-    await window.bookWallAPI.saveUserProfile(profileData);
 }
 
 // Show welcome screen
@@ -487,7 +316,7 @@ function createBookElement(book) {
     return bookDiv;
 }
 
-// Show popup
+// Show book upload popup
 if (addBtn) {
     addBtn.addEventListener('click', () => {
         popupOverlay.classList.add('active');
@@ -495,7 +324,7 @@ if (addBtn) {
     });
 }
 
-// Close popup on outside click
+// Close book popup on outside click
 if (popupOverlay) {
     popupOverlay.addEventListener('click', (e) => {
         if (e.target === popupOverlay) {
@@ -505,7 +334,7 @@ if (popupOverlay) {
     });
 }
 
-// Upload button - select file from computer
+// Upload book cover
 if (uploadBtn) {
     uploadBtn.addEventListener('click', async () => {
         try {
@@ -531,6 +360,8 @@ if (uploadBtn) {
         }
     });
 }
+
+// Test function - add at the end of the fil
 
 // Start
 initializeApp();

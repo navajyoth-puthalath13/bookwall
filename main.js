@@ -62,6 +62,32 @@ ipcMain.handle('open-file-dialog', async () => {
   return { success: false };
 });
 
+// Sticker dialog handler
+ipcMain.handle('open-sticker-dialog', async () => {
+  const result = await dialog.showOpenDialog(windowInstance, {
+    properties: ['openFile'],
+    filters: [
+      { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'] }
+    ]
+  });
+  
+  if (!result.canceled && result.filePaths.length > 0) {
+    const sourcePath = result.filePaths[0];
+    const ext = path.extname(sourcePath);
+    const fileName = `sticker_${Date.now()}${ext}`;
+    const destPath = path.join(__dirname, 'assets', 'stickers', fileName);
+    
+    try {
+      await fs.copyFile(sourcePath, destPath);
+      return { success: true, filePath: fileName };
+    } catch (error) {
+      console.error('Failed to copy sticker:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  return { success: false };
+});
+
 // Data file helpers
 const getUserFilePath = () => path.join(__dirname, 'data', 'user.json');
 const getBooksFilePath = () => path.join(__dirname, 'data', 'books.json');

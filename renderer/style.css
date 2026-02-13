@@ -36,8 +36,14 @@ body.popup-active {
 
 .sticker {
     position: absolute;
-    pointer-events: none;
+    pointer-events: auto;
     z-index: 1;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.sticker:hover {
+    transform: scale(1.05);
 }
 
 .sticker-1 {
@@ -714,4 +720,28 @@ body.popup-active {
     top: 29.047px;
     z-index: 999;
     background: rgba(255, 255, 255, 0.1); /* Debug - remove later */
+}
+
+/* Custom added stickers */
+.custom-sticker {
+    position: absolute;
+    cursor: move;
+    z-index: 5;
+    user-select: none;
+    transition: filter 0.2s ease;
+}
+
+.custom-sticker:hover {
+    filter: brightness(1.15) drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+}
+
+.custom-sticker:active {
+    cursor: grabbing;
+}
+
+.custom-sticker img {
+    width: 100%;
+    height: auto;
+    pointer-events: none;
+    display: block;
 }
